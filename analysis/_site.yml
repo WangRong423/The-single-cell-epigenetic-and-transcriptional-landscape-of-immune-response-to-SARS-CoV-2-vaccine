@@ -5,13 +5,16 @@ navbar:
   left:
   - text: Home
     href: index.html
-  - text: About
-    href: about.html
-  - text: License
-    href: license.html
+  - text: scRNA-analysis
+    href: scRNA-analysis.html
+  - text: scATAC-seq-analysis
+    href: scATAC-seq_analysis.html
+  - text: conjoint analysis 
+    href: scATAC-seq_analysis.html
 output:
   workflowr::wflow_html:
     toc: yes
     toc_float: yes
+    code_folding: hide 
     theme: cosmo
     highlight: textmate
