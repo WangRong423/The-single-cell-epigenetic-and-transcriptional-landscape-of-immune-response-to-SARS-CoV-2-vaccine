@@ -1,0 +1,12 @@
+---
+title: "Upstream_analysis.Rmd"
+author: "wangrong"
+date: "2021/12/28"
+output: html_document
+---
+##  SAMPLE
+*  vaccine  :BBIBP-CorV, was manufactured by Sinopharm China National Biotec Group (CNBG) 
+*  participants ：M1,M2,M3,M5 all male
+*  timepoints  :
+![timepoints ](timepoint.png)
+

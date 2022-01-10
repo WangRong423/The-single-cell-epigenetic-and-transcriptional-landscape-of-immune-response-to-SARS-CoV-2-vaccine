@@ -1,0 +1,113 @@
+---
+title: "clusterProfiler"
+author: "wangrong"
+date: "2022/1/7"
+output: workflowr::wflow_html
+code_folding: hide
+editor_options:
+  
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(DT)
+```
+
+```{r prepare,include=FALSE}
+cell_type<-readRDS(file="/database/Results/0712_ATAC+RNA/downstream_analysis/cell_type.rds")
+cell_type<-gsub('/','',cell_type)
+KEGG_DEG<-list()
+GO_DEG <- list()
+clustering=list()
+filterd=list()
+trans_KEGG_DEG=list()
+trans_GO_DEG=list()
+for( i in 1:length(cell_type)){
+print(cell_type[i])}
+```
+
+```{r loop,eval=FALSE}
+for( i in 1:length(cell_type)){
+print(cell_type[i])
+annotation<-read.table(paste0('/database/Results/0712_ATAC+RNA/P1_Resultes_flitered/P1_',cell_type[i],'_Results_filtered.csv'),header = TRUE,sep = ",")
+del <- grep('_flip', annotation$gene, value = F)
+annotation <- annotation[-del,]
+print(dim(annotation))
+annotation1<-annotation[apply(annotation[, c(3,4,5,6,7,8,9,10,11)], MARGIN=1, FUN =  function(xxx) {
+               sum(xxx==0)<=6}),]
+filterd<-annotation1[annotation1$the.numbers.of.genes>=6,]
+b<-as.data.frame(table(filterd$clustering.results))
+c<-b[which(b$Freq>=6),]
+
+filterd<-filterd[which(filterd$clustering.results%in%c$Var1),]
+print(dim(filterd))
+filterd$clustering.results<-as.factor(filterd$clustering.results)
+write.csv(c,file=paste('/database/Results/0712_ATAC+RNA/P1_Resultes_flitered/merge/summary/p1_',cell_type[i],'_clustering_numbers.of.genes.csv'))
+clustering<-levels( filterd$clustering.results)
+print(paste(cell_type[i],' is filtered'))
+
+	for( j in 1:length(clustering)){
+	
+	print(clustering[j])
+	clustering_gene_table<-filterd[filterd$clustering.results==clustering[j],]
+	clustering_gene_table$gene<-as.character(clustering_gene_table$gene)
+
+	df <- try(bitr(clustering_gene_table$gene, fromType = "SYMBOL",
+           toType = c( "ENTREZID"),
+           OrgDb="org.Hs.eg.db"))
+
+	if('try-error' %in% class(df))            
+	{next}
+	KEGG_DEG[[j]] <- enrichKEGG(df$ENTREZID,organism = "hsa",pAdjustMethod = "none", pvalueCutoff = 0.1)
+	
+	temp <- try(setReadable(KEGG_DEG[[j]],OrgDb = "org.Hs.eg.db",keyType = "ENTREZID"),silent=FALSE)
+	if('try-error' %in% class(temp))            
+    {next}
+	trans_KEGG_DEG[[j]]<-temp
+	trans_KEGG_DEG[[j]]@result$clustering<-rep(clustering[j], nrow(trans_KEGG_DEG[[j]]@result))
+	print(paste(cell_type[i],'_',clustering[j],'KEGG is done'))
+	
+	GO_DEG[[j]] <- enrichGO(df$ENTREZID, OrgDb = "org.Hs.eg.db", ont='ALL',pAdjustMethod = "none", pvalueCutoff = 0.1,keyType = 'ENTREZID')
+	temp1 <- try(setReadable(GO_DEG[[j]],OrgDb = "org.Hs.eg.db",keyType = "ENTREZID"),silent=FALSE)
+	if('try-error' %in% class(temp1))            
+    {next}
+	trans_GO_DEG[[j]]<-temp1
+	trans_GO_DEG[[j]]@result$clustering<-rep(clustering[j], nrow(trans_GO_DEG[[j]]@result))
+	print(paste(cell_type[i],'_',clustering[j],'GO is done'))
+	
+	}
+
+write.csv(do.call(rbind,lapply(trans_KEGG_DEG,as.data.frame)),file=paste('/database/Results/0712_ATAC+RNA/P1_Resultes_flitered/merge/summary/P1_',cell_type[i],'_KEGG.csv'))
+write.csv(do.call(rbind,lapply(trans_GO_DEG,data.frame)),file=paste('/database/Results/0712_ATAC+RNA/P1_Resultes_flitered/merge/summary/P1_',cell_type[i],'_GO.csv'))
+print(paste(cell_type[i],' is done'))
+}
+```
+
+```{r filter}
+KEGG_list <- list()
+for( k in 1:length(cell_type)){
+KEGG_list[[k]] <- read.table(paste0('/database/Results/0712_ATAC+RNA/P1_Resultes_flitered/merge/summary/P1_ ',cell_type[k],' _KEGG.csv'),header = TRUE,sep = ",")
+KEGG_list[[k]]$cell_type <- rep(cell_type[k], nrow(KEGG_list[[k]]))
+}
+ALL_KEGG <- do.call(rbind,KEGG_list)
+filter_all_KEGG <- ALL_KEGG[ALL_KEGG$Count>=2,]
+sord_all_KEGG <- filter_all_KEGG[order(filter_all_KEGG$pvalue),]
+
+GO_list <- list()
+for( k in 1:length(cell_type)){
+GO_list[[k]] <- read.table(paste('/database/Results/0712_ATAC+RNA/P1_Resultes_flitered/merge/summary/P1_',cell_type[i],'_GO.csv'),header = TRUE,sep = ",")
+GO_list[[k]]$cell_type <- rep(cell_type[k], nrow(GO_list[[k]]))
+}
+ALL_GO <- do.call(rbind,GO_list)
+filter_all_GO <- ALL_GO[ALL_GO$Count>=2,]
+sord_all_GO <- filter_all_GO[order(filter_all_GO$pvalue),]
+```
+
+
+```{r table}
+DT::datatable( sord_all_KEGG  )
+DT::datatable( sord_all_GO  )
+```

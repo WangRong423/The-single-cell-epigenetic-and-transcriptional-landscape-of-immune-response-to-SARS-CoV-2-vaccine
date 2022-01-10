@@ -1,0 +1,281 @@
+---
+title: "Batch effect correction"
+author: "wangrong"
+date: "2021/12/28"
+output: workflowr::wflow_html
+code_folding: hide
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r setup}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+library(Seurat)
+library(cowplot)
+library(ggplot2)
+library(Matrix)
+library(dplyr)
+library(umap)
+```
+## batch effects 
+
+View batch effects through direct Merge seurat objectView batch effects through direct Merge seurat object
+```{r filter doublets and merge ,eval=FALSE}
+batch_list=list("M1-1","M1-2","M1-3","M1-4","M1-5","M1-6","M1-7","M1-8","M1-9","M1-10","M2-1","M2-2","M2-3","M2-4","M2-5","M2-6","M2-7","M2-8","M2-9","M2-10","M3-1","M3-2","M3-3",
+"M3-4","M3-5","M3-6","M3-7","M3-8","M3-9","M3-10","M5-1","M5-2","M5-3","M5-4","M5-5","M5-6","M5-7","M5-8","M5-9","M5-10")
+pbmc_list <- list()
+pbmc_listname=c("M1-1","M1-2","M1-3","M1-4","M1-5","M1-6","M1-7","M1-8","M1-9","M1-10","M2-1","M2-2","M2-3","M2-4","M2-5","M2-6","M2-7","M2-8","M2-9","M2-10","M3-1","M3-2","M3-3",
+"M3-4","M3-5","M3-6","M3-7","M3-8","M3-9","M3-10","M5-1","M5-2","M5-3","M5-4","M5-5","M5-6","M5-7","M5-8","M5-9","M5-10")
+for( i in 1:length(batch_list))
+{
+print(batch_list[[i]])
+dir=paste0('/database/Results/0712_ATAC+RNA/percent.mt/',batch_list[[i]],'.rds')
+pbmc_list[[i]]<-readRDS(dir)
+list_dir=paste0('/database/Results/0712_ATAC+RNA/doubles/after_filter/all_',batch_list[[i]],'.csv')
+print(list_dir)
+lists<-read.table(list_dir,header=T,sep=',')
+rownames(lists)<-lists$barcode
+lists<-lists[,-1]
+pbmc_list[[i]]$cell_type<-lists$cell_type
+}
+
+PBMCmerge <- merge(pbmc_list[[1]],pbmc_list[2:length(pbmc_list)])
+PBMCmerge <- NormalizeData(PBMCmerge, normalization.method = "LogNormalize", scale.factor = 10000)
+PBMCmerge <- FindVariableFeatures(PBMCmerge, selection.method = "vst", nfeatures = 5000)
+PBMCmerge <- ScaleData(PBMCmerge,features=VariableFeatures(PBMCmerge)) 
+PBMCmerge <- RunPCA(PBMCmerge, features = VariableFeatures(object = PBMCmerge))
+PBMCmerge <- FindNeighbors(PBMCmerge, dims = 1:20)
+PBMCmerge <- FindClusters(PBMCmerge, resolution = 0.9)
+PBMCmerge <- RunUMAP(PBMCmerge, dims = 1:20)
+PBMCmerge <- RunTSNE(PBMCmerge, dims = 1:20)
+dev.off()
+save(PBMCmerge,file="/database/Results/0712_ATAC+RNA/downstream_analysis/pbmc_merge.Rdata")
+```
+
+## Batch effect correction before
+
+I get the batch effect correction before PC diagram:
+
+```{r plot, echo=FALSE}
+load("/database/Results/0712_ATAC+RNA/downstream_analysis/pbmc_merge.Rdata")
+DimPlot(PBMCmerge, reduction = "umap",label = TRUE,group.by="orig.ident")+ggtitle("Before")
+DimPlot(PBMCmerge, reduction = "umap",label = TRUE,group.by="cell_type")+ggtitle("raw-doublet")
+```
+
+## Batch effect correction 
+Add participant ,timepoints and singlets for sample metadata
+
+```{r add metadata, eval=FALSE}
+sample.list <- SplitObject(PBMCmerge, split.by = "orig.ident")
+cellinfo<-subset(PBMCmerge@meta.data,select=c(orig.ident,percent.mt, run, cell_type))
+pbmc <- CreateSeuratObject(PBMCmerge@assays$RNA@counts,meta.data = cellinfo)
+Timepoints<-pbmc@meta.data$orig.ident
+p1<-gsub('M1[-][0-9]', 'P1', Timepoints)
+p2<-gsub('M2[-][0-9]', 'P2', p1)
+p3<-gsub('M3[-][0-9]', 'P3', p2)
+p4<-gsub('M5[-][0-9]', 'P4', p3)
+p5<-gsub('0', '', p4)
+pbmc@meta.data$Participants<-p5 
+
+t1<-gsub('M[0-9][-]1', 'Day0', Timepoints)
+t2<-gsub('M[0-9][-]2', 'Day1', t1)
+t3<-gsub('M[0-9][-]3', 'Day3', t2)
+t4<-gsub('M[0-9][-]4', 'Day6', t3)
+t5<-gsub('M[0-9][-]5', 'Day14', t4)
+t6<-gsub('M[0-9][-]6', 'Day28', t5)
+t7<-gsub('M[0-9][-]7', 'Day29', t6)
+t8<-gsub('M[0-9][-]8', 'Day31', t7)
+t9<-gsub('M[0-9][-]9', 'Day34', t8)
+t10<-gsub('M[0-9][-]10', 'Day43', t9)
+pbmc@meta.data$Timepoints<-t10
+saveRDS(pbmc,file="/database/Results/0712_ATAC+RNA/downstream_analysis/filted_pbmc_merged.rds")
+```
+
+```{r Get rid of the M2 M2-3-2,eval=FALSE}
+clean_pbmc<-subset(pbmc,run == "M2-2",invert=TRUE)
+clean_pbmc<-subset(pbmc,run == "M2-3",invert=TRUE)
+saveRDS(clean_pbmc,file="/database/Results/0712_ATAC+RNA/downstream_analysis/all38_pbmc_merged.rds")
+```
+
+```{r pca,eval=FALSE}
+clean_pbmc <- readRDS(file="/database/Results/0712_ATAC+RNA/downstream_analysis/all38_pbmc_merged.rds")
+h_pbmc<-NormalizeData(clean_pbmc,verbose = FALSE)
+h_pbmc<-FindVariableFeatures(h_pbmc,selection.method = "vst", nfeatures = 2000)
+h_pbmc<-ScaleData(h_pbmc,verbose = FALSE)
+h_pbmc<-RunPCA(h_pbmc,pc.genes = h_pbmc@var.genes, npcs = 20, verbose = FALSE)
+saveRDS(h_pbmc,file="/database/Results/0712_ATAC+RNA/downstream_analysis/h_pbmc_merged.rds")
+```
+
+```{r plotbefore}
+h_pbmc<-readRDS(file="/database/Results/0712_ATAC+RNA/downstream_analysis/h_pbmc_merged.rds")
+DimPlot(object = h_pbmc, reduction = "pca", pt.size = .1, group.by = "orig.ident")
+DimPlot(object = h_pbmc, reduction = "pca", pt.size = .1, group.by = "Timepoints")
+#DimPlot(object = h_pbmc, reduction = "pca", pt.size = .1, group.by = "cell_type")
+DimPlot(object = h_pbmc, reduction = "pca", pt.size = .1, group.by = "Participants")
+s_pbmc<-subset(h_pbmc,cell_type == "Singlet")
+
+```
+
+```{r RunHarmony ,eval=FALSE}
+single_pbmc<-NormalizeData(s_pbmc,verbose = FALSE)
+single_pbmc<-FindVariableFeatures(single_pbmc,selection.method = "vst", nfeatures = 2000)
+single_pbmc<-ScaleData(single_pbmc,verbose = FALSE)
+single_pbmc<-RunPCA(single_pbmc,pc.genes = h_pbmc@var.genes, npcs = 20, verbose = FALSE)
+single_pbmc <- single_pbmc %>% RunHarmony("orig.ident", plot_convergence = TRUE)
+harmony_embeddings <- Embeddings(single_pbmc, 'harmony')
+```
+
+Batch effect correction after
+```{r plotafter }
+single_pbmc <- readRDS(file="/database/Results/0712_ATAC+RNA/downstream_analysis/10.12.harmony.Leiden.tsne.0.6.rds") 
+DimPlot(object = single_pbmc, reduction = "harmony", pt.size = .1, group.by = "orig.ident")
+DimPlot(object = single_pbmc, reduction = "harmony", pt.size = .1, group.by = "Timepoints")
+DimPlot(object = single_pbmc, reduction = "harmony", pt.size = .1, group.by = "Participants")
+
+```
+
+The resulting batch-corrected matrix was used to build nearest neighbor graph using Seurat . Such nearest neighbor graph was then used to find clusters by Leiden . The cluster-specific marker genes were identified using the FindAllMarker function.
+
+
+## Clustering 
+We tried four resolutions and ended up annotating with 1.5, the best for clustering(10.12.harmony.Leiden.tsne.0.6.rds actually stored is 1.5 resolution RDS)
+```{r clustering,eval=FALSE}
+s_pbmc<- FindNeighbors(single_pbmc,reduction = "harmony", dims = 1:20) 
+s_pbmc_1<- FindClusters(s_pbmc,algorithm=4, method = "igraph",resolution =  c(0.4, 0.6, 1.0, 1.5))
+s_pbmc_1<-RunTSNE(s_pbmc_1,reduction = "harmony", dims = 1:20) 
+saveRDS(s_pbmc_1,file="/database/Results/0712_ATAC+RNA/downstream_analysis/10.12.harmony.Leiden.tsne.0.6.rds") 
+```
+
+
+## Annotation
+
+Annotation of the resulting clusters to cell types was based on the known markers.Violin plots, dot plots, and feature plots are used to show the results
+```{r featureplot}
+
+gene=c("MS4A1","XBP1","MZB1","CD79A","CD79B")
+for( i in 1:length(gene))
+{
+p1 <- FeaturePlot(single_pbmc, features = gene[[i]],reduction = "tsne")+annotate(geom = 'segment', y = Inf, yend = Inf, color = 'black', x = -Inf, xend = Inf, size = 1)+
+ annotate(geom = 'segment', x = Inf, xend = Inf, color = 'black', y = -Inf, yend = Inf, size = 0.5)
+print(p1)
+}
+
+
+gene1=c("CD3D", "CD3E", "CD8A", "CD8B","CCR7","CD4")
+for( i in 1:length(gene1))
+{
+p2 <- FeaturePlot(single_pbmc, features = gene1[[i]],reduction = "tsne")+annotate(geom = 'segment', y = Inf, yend = Inf, color = 'black', x = -Inf, xend = Inf, size = 1)+
+ annotate(geom = 'segment', x = Inf, xend = Inf, color = 'black', y = -Inf, yend = Inf, size = 0.5)
+print(p2)
+}
+
+gene2=c("CST3", "LYZ")
+for( i in 1:length(gene2))
+{
+p3 <- FeaturePlot(single_pbmc, features = gene2[[i]],reduction = "tsne")+annotate(geom = 'segment', y = Inf, yend = Inf, color = 'black', x = -Inf, xend = Inf, size = 1)+
+ annotate(geom = 'segment', x = Inf, xend = Inf, color = 'black', y = -Inf, yend = Inf, size = 0.5)
+print(p3)
+}
+
+
+gene3=c("GNLY","NKG7")
+for( i in 1:length(gene3))
+{
+p4 <- FeaturePlot(single_pbmc, features = gene3[[i]],reduction = "tsne")+annotate(geom = 'segment', y = Inf, yend = Inf, color = 'black', x = -Inf, xend = Inf, size = 1)+
+ annotate(geom = 'segment', x = Inf, xend = Inf, color = 'black', y = -Inf, yend = Inf, size = 0.5)
+print(p4)
+}
+```
+
+```{r  dotplot}
+lei_pbmc<- readRDS(file="/database/Results/0712_ATAC+RNA/downstream_analysis/10.13.order_idents_1.5_leiden.tsne.rds")
+all_gene=c("CD3D", "CD3E", "CD8A", "CD8B","CCR7","CD4","GNLY","NKG7","MS4A1","XBP1","MZB1","CD79A","CD79B","CD27","GATA2","CST3", "LYZ")
+DotPlot(lei_pbmc, features = all_gene,col.min=-2, col.max=2)+ RotatedAxis()+ scale_color_gradient2(high="red",mid = "lightgrey",low ="darkblue", midpoint = 0)
+T_gene=c("CD4", "CD8A", "CD8B","CCR7","LEF1","TCF7","CD69","AQP3","CCR6","CXCL6","FOXP3","NKG7","GZMK","CCL5","GZMB","GNLY","TYMS","MKI67")
+DotPlot(lei_pbmc, features = T_gene,col.min=-2, col.max=2)+ RotatedAxis()+ scale_color_gradient2(high="red",mid = "lightgrey",low ="darkblue", midpoint = 0)
+B_gene=c("CD79A", "CD79B", "MS4A1","XBP1","MZB1","CD19","IGHD","IGHM","IL4R","TCL1A","CD27","CD38","IGHG","TBX21")
+DotPlot(lei_pbmc, features = B_gene,col.min=-2, col.max=2)+ RotatedAxis()+ scale_color_gradient2(high="red",mid = "lightgrey",low ="darkblue", midpoint = 0)
+
+M_gene=c("CST3", "LYZ", "CD14","CD16","CLEC9A","CD1C","CLEC4C","CD123","CD34","CD68","CD163","FCGR3B", "CSF3R","KIT")
+DotPlot(lei_pbmc, features = M_gene,col.min=-2, col.max=2)+ RotatedAxis()+ scale_color_gradient2(high="red",mid = "lightgrey",low ="darkblue", midpoint = 0)
+
+```
+
+```{r vlnplot}
+library(Seurat)
+library(ggplot2)
+
+
+modify_vlnplot <- function(obj, feature, pt.size = 0, plot.margin = unit(c(-0.75, 0, -0.75, 0), "cm"),...) {
+       p <- VlnPlot(obj, features = feature, pt.size = pt.size, ... ) +
+               xlab("") + ylab(feature) + ggtitle("") +
+               theme(legend.position = "none",
+               axis.text.x = element_blank(),
+               axis.text.y = element_blank(),
+               axis.ticks.x = element_blank(),
+               axis.ticks.y = element_line(),
+               axis.title.y = element_text(size = rel(1), angle = 0, vjust = 0.5),
+               plot.margin = plot.margin )
+       return(p)
+}
+
+StackedVlnPlot <- function(obj, features, pt.size = 0, plot.margin = unit(c(-0.75, 0, -0.75, 0), "cm"), ...) {
+       plot_list <- purrr::map(features, function(x) modify_vlnplot(obj = obj,feature = x, ...))
+            plot_list[[length(plot_list)]]<- plot_list[[length(plot_list)]] +
+            theme(axis.text.x=element_text(), axis.ticks.x = element_line())
+       p <- patchwork::wrap_plots(plotlist = plot_list, ncol = 1)
+       return(p)
+}
+
+my36colors <- c('#E5D2DD', '#53A85F', '#F1BB72', '#F3B1A0', '#D6E7A3', '#57C3F3', '#476D87',
+         '#E95C59', '#E59CC4', '#AB3282', '#23452F', '#BD956A', '#8C549C', '#585658',
+         '#9FA3A8', '#E0D4CA', '#5F3D69', '#C5DEBA', '#58A4C3', '#E4C755', '#F7F398',
+         '#AA9A59', '#E63863', '#E39A35', '#C1E6F3', '#6778AE', '#91D0BE', '#B53E2B',
+         '#712820', '#DCC1DD', '#CCE0F5', '#CCC9E6', '#625D9E', '#68A180', '#3A6963',
+         '#968175')
+
+library(RColorBrewer)
+b1<-brewer.pal(9, "BuGn")
+b2<-brewer.pal(9,"Blues")
+b3<-brewer.pal(9,"Oranges")
+b4<-brewer.pal(9,"Purples")
+b5<-brewer.pal(9,"Paired")
+b6<-brewer.pal(13,"Paired")
+b7<-brewer.pal(8,"Set2")
+b8<-brewer.pal(8,"YlOrBr")
+c<-c(b1[c(1,3,5,7,9)],b2[c(2,4,6,8)],b3,b4,b5[c(9,10)])
+DimPlot(lei_pbmc, reduction = "tsne", label = TRUE, pt.size = .5,cols=c)
+c<-c(b8[c(1,3,5)],b2[c(3,4,5,6)],b6,b7)
+gene=c("MS4A1","XBP1","MZB1","CD79A","CD79B","CD27")
+gene1=c("CD3D", "CD3E", "CD8A", "CD8B","CCR7","CD4")
+gene2=c("CST3", "LYZ")
+gene3=c("GNLY","NKG7")
+StackedVlnPlot(lei_pbmc, gene1, pt.size=0, cols=my36colors)+ RotatedAxis()
+
+StackedVlnPlot(lei_pbmc, gene, pt.size=0, cols=my36colors)+ RotatedAxis()
+
+
+StackedVlnPlot(lei_pbmc,c("CST3", "LYZ","GNLY","NKG7","CYTL1","GATA2"), pt.size=0, cols=my36colors)+ RotatedAxis()
+```
+
+```{r,eval=FALSE}
+My_levels <- c('1','2','4','5','7','9','10','11','12','13','15','16','18','24','27','3','17','19','6','14','20','22','25','28','29','8','21','23','26')
+Idents(lei_pbmc) <- factor(Idents(lei_pbmc), levels= My_levels)
+new.cluster.ids <- c("CD8+ CLT", "CD8+ CLT", "CD8+ Tem", "CD4+ naïve", "CD4+ Tem", "CD8+ naïve", "CD4+ Treg", "CD4+ naïve", "CD4+ naïve", "CD8+ CLT", "Th1/Th17", "MAIT", "CD4+ Treg", "CD4+ naïve", "Plasmacytoid DC", "NK", "NK", "NK", "naïve B", "naïve B", "memery B", "memery B", "naïve B", "Plasmablasts","HSC","CD14+ Mono","CD16+ Mono","Intermediate Mono","Myeloid DC")
+rename_pbmc <- RenameIdents(lei_pbmc, new.cluster.ids)
+b6<-brewer.pal(12,"Paired")
+b7<-brewer.pal(8,"Set2")
+c<-c(b6[c(1,2,3,4,5,7,8,9,10,11,12)],b7)
+DimPlot(rename_pbmc, reduction = "tsne", label = TRUE, pt.size = .5,cols=c)
+saveRDS(rename_pbmc,"/database/Results/0712_ATAC+RNA/downstream_analysis/10.20.annotation_pbmc.rds")
+```
+
+```{r plotumap}
+rename_pbmc <- readRDS("/database/Results/0712_ATAC+RNA/downstream_analysis/10.20.annotation_pbmc.rds")
+b6<-brewer.pal(12,"Paired")
+b7<-brewer.pal(8,"Set2")
+c<-c(b6[c(1,2,3,4,5,7,8,9,10,11,12)],b7)
+DimPlot(rename_pbmc, reduction = "tsne", label = TRUE, pt.size = .5,cols=c)
+DimPlot(rename_pbmc, reduction = "tsne", split.by = "Timepoints", pt.size = .3,cols=c,combine = F, ncol = 2)
+DimPlot(rename_pbmc, reduction = "tsne", split.by = "Participants", pt.size = .3,cols=c,combine = F, ncol = 2)
+```

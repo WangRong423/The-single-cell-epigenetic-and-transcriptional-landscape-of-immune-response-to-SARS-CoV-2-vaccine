@@ -1,0 +1,116 @@
+---
+title: "scRNA-analysis"
+author: "wangrong"
+date: "2021/12/28"
+output: workflowr::wflow_html
+code_folding: hide
+editor_options:
+  
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(message=FALSE, error=FALSE, warning=FALSE)
+library(knitr)
+library(rmarkdown)
+```
+
+
+##  QC table
+Raw gene expression matrices were generated for each sample by the Cell Ranger ARC(V.2.0) Pipeline coupled with human reference version GRCh38. The output filtered gene expression matrices were analyzed by R software (v.4.1.1) with the Seurat package (v.4.0.3).
+Low-quality cells were removed if they met the following criteria: 
+
+(1) <800 &>25000 unique molecular identifiers (UMIs); 
+(2) <200 &>5000 genes which expressed  in less than three cells;
+(3) UMIs derived from the mitochondrial genome >15%.
+
+```{r }
+test<-read.csv('/home/rongwang/The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine/data/SAMPLE_INFORMATION.csv',sep = ",",header = F)
+
+kable(test)
+```
+
+## Identify doublets
+To remove potential doublets, for PBMC samples, cells with UMI counts above 25,000 and detected genes above 5,000 are filtered out.  Additionally, we applied DoubletFinder to identify potential doublets. After quality control, a total of 384,765 cells were remained. 
+```{r  DoubletFinder, eval=FALSE}
+library('patchwork')
+library('ggplot2')
+library('dplyr')
+library('Seurat')
+library('Matrix')
+library('fields')
+library('KernSmooth')
+library('ROCR')
+library('parallel')
+library('DoubletFinder')
+
+people <- c('1','2', '3', '5')
+
+for (person in people){
+  for (timepoint in 1:10) {
+    data_dir = paste('/database/Results/0712_ATAC+RNA/M', person, '-', timepoint, '/outs/filtered_feature_bc_matrix/', sep = "")
+    print (data_dir)
+    
+    sample <- Read10X(data.dir = data_dir)
+    seu_sample <- CreateSeuratObject(counts = sample$`Gene Expression`)
+    seu_sample <- NormalizeData(seu_sample)
+    seu_sample <- FindVariableFeatures(seu_sample, selection.method = "vst", nfeatures = 2000)
+    seu_sample <- ScaleData(seu_sample)
+    seu_sample <- RunPCA(seu_sample)
+    seu_sample <- FindNeighbors(seu_sample)
+    seu_sample <- FindClusters(seu_sample)
+    seu_sample <- RunUMAP(seu_sample, dims = 1:10)
+    num_cell <- nrow(seu_sample@meta.data)
+    title1 <- paste('Num_Cell:', num_cell, seq = "")
+    p <- DimPlot(seu_sample, reduction = "umap", label = TRUE) + ggtitle(title1)
+    
+    sweep.res.list_sample <- paramSweep_v3(seu_sample, PCs = 1:10, sct = FALSE)
+    sweep.stats_sample <- summarizeSweep(sweep.res.list_sample, GT = FALSE)
+    bcmvn_sample <- find.pK(sweep.stats_sample)
+    mpK <- as.numeric(as.vector(bcmvn_sample$pK[which.max(bcmvn_sample$BCmetric)]))
+    print(paste("The best pK value of sample is:", mpK))
+    
+    annotations <- seu_sample@meta.data$seurat_clusters
+    homotypic.prop <- modelHomotypic(annotations)
+    doublet_rate <- 0.0008*num_cell*0.01
+    nExp_poi <- round(doublet_rate*num_cell) 
+    nExp_poi.adj <- round(nExp_poi*(1-homotypic.prop))
+    
+    seu_sample <- doubletFinder_v3(seu_sample, PCs = 1:10, pN = 0.25, pK = mpK, nExp = nExp_poi, reuse.pANN = FALSE, sct = FALSE)
+    
+    reuse.pANN_path <- paste('pANN_0.25_', mpK, '_', nExp_poi, sep = "")
+    seu_sample <- doubletFinder_v3(seu_sample, PCs = 1:10, pN = 0.25, pK = mpK, nExp = nExp_poi.adj, reuse.pANN = reuse.pANN_path, sct = FALSE)
+    
+    group.by_path <- paste('DF.classifications_0.25_', mpK, '_', nExp_poi.adj, sep = "")
+    title2 <- paste('Singlet:', num_cell - nExp_poi.adj, ' Doublet:', nExp_poi.adj, seq = "")
+    q <- DimPlot(seu_sample, reduction = "umap", group.by = group.by_path) + ggtitle(title2)
+    
+    name = paste('DoubletFinder_M', person, '-', timepoint, '.pdf', sep = "")
+    pdf(file = name)
+    print(p)
+    print(q)
+    dev.off ()
+    
+    print(paste('DoubletFinder_M', person, '-', timepoint, ' DONE!', sep = ""))
+  }
+}
+
+```
+
+##  Batch effect correction & Clustering and annotation 
+To integrate cells into a shared space from different datasets for unsupervised clustering, we used the harmony algorithm (Korsunsky et al., 2019) to do batch effect correction. 
+[Batch effect correction & Clustering and annotation ](Batch-effect-correction.html) 
+
+
+##  Comparing immune cell proportion
+The cell type ratio is calculated by dividing the number of cells of a particular cell type at a given point in time by the number of cells at a given point in time in a given participant. 
+[Comparing immune cell proportion ](Comparing-immune-cell-proportion.html)
+
+##  Gene sharing and specific expression analysis across timepoints
+Mashr is used to estimate the role of each gene at each time point, allowing cross-time sharing and gene specific expression at specific time points
+[mashr](mashr.html)
+
+##  Gene Ontology enrichment analysis for sets of genes with identical expression patterns
+Through feature extraction, hierarchical clustering was carried out according to the slope, direction, zero percentage and cross-point slope of genes at ten timepoints.The degree of cohesion and separation were calculated for each clustering.
+Based on these genes, enriched GO terms and KEGG were then acquired for each genes using R package clusterProfiler following the default parameters. Annotation R package “org.Hs.eg.db” was used to map gene identifiers.
+[clusterProfiler](clusterprofiler.html)

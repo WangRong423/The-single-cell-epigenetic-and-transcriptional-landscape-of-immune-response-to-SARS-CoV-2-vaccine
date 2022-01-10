@@ -1,0 +1,64 @@
+---
+title: "Comparing immune cell proportion"
+author: "wangrong"
+date: "2022/1/4"
+output: workflowr::wflow_html
+code_folding: hide
+editor_options:
+  
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+library(tidyverse)
+library(RColorBrewer)
+library("do")
+library(reshape2)
+```
+
+
+The change of cell proportion was observed by locking time and cell type respectively
+
+```{r line_chart}
+df1<-read.csv(file="/database/Results/0712_ATAC+RNA/downstream_analysis/raito_row.csv")
+df1$Var2 <- factor(df1$Var2,levels=c("Day0","Day1","Day3","Day6","Day14","Day28","Day29","Day31","Day34","Day43"))
+b6<-brewer.pal(12,"Paired")
+b7<-brewer.pal(8,"Set2")
+c<-c(b6[c(1,2,3,4,5,7,8,9,10,11,12)],b7)
+ggplot(df1, aes(x=Var1, y=ratio, fill=Var3)) + 
+  facet_grid(.~Var2)+
+  geom_bar(stat = "identity", width=0.5, col='black') +
+  scale_fill_manual(values = c)+
+  theme(panel.grid.major=element_blank())+
+  theme_bw()
+
+antibody <- read.table("/home/rongwang/file/timepoint.csv", sep = ",", header = TRUE)
+antibody$样本编号<-sub('LCL','P1',antibody$样本编号)
+antibody$样本编号<-sub('LFW','P3',antibody$样本编号)
+antibody$样本编号<-sub('LXJ','P4',antibody$样本编号)
+antibody$样本编号<-sub('ZHL','P2',antibody$样本编号)
+antibody$时间<-Replace(antibody$时间,pattern = c("0:Day0","1:Day1","3:Day3","6:Day6","14:Day14","30:Day28","31:Day29","33:Day31","37:Day34","45:Day43"))
+antibody$时间<-Replace(antibody$时间,pattern = c("DayDay14:Day14","Day3Day0:Day28","Day3Day1:Day29","Day3Day3:Day31","DayDay34:Day34"))
+antibody<-antibody[antibody$时间!="Day6Day0",]
+antibody1<-antibody[,c("序号","样本编号","时间","生物所中和抗体","NAb浓度")]
+names(antibody1) <- c("序号","样本编号","时间","浓度NAb (live virus)","浓度NAb (in vitro)")
+antibody1<-melt(antibody1,id=c("序号","样本编号","时间"))
+names(antibody1)=c('X','Var1','Var2','Var3','ratio')
+an_df<-rbind(df1,antibody1)
+an_df$Var2 <- factor(an_df$Var2,levels=c("Day0","Day1","Day3","Day6","Day14","Day28","Day29","Day31","Day34","Day43"))
+
+ggplot(an_df,aes(x=Var2,y=ratio,colour=Var1,group=Var1,fill=Var1,shape=Var2)) +
+  facet_wrap(Var3~.,scale="free_y")+
+  scale_shape_manual(values = c(20,20,20,20,20,20,20,20,20,20))+
+  geom_line(size =0.8)+
+  geom_point(size=3)+
+  theme(axis.line = element_line(colour = "black"))+
+  labs( x = 'Cell types', y = 'Cell proportion')+
+  scale_color_manual(values = b7)+
+  theme_bw()+
+  theme(axis.title = element_text(size=20),panel.grid=element_blank())+
+  theme(axis.text.x = element_text(angle = 45,size = rel(1.2)))+
+  theme(axis.text.y= element_text(size = rel(1.2)))
+```
+
