@@ -1,7 +1,7 @@
-name: "The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine"
+name: The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine
 output_dir: ../docs
 navbar:
-  title: "The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine"
+  title: The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine
   left:
   - text: Home
     href: index.html
@@ -9,12 +9,16 @@ navbar:
     href: scRNA-analysis.html
   - text: scATAC-seq-analysis
     href: scATAC-seq_analysis.html
-  - text: conjoint analysis 
+  - text: conjoint analysis
     href: scATAC-seq_analysis.html
+  right:
+  - icon: fab fa-github
+    text: Source code
+    href: https://github.com/WangRong423/The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine
 output:
   workflowr::wflow_html:
     toc: yes
     toc_float: yes
-    code_folding: hide 
+    code_folding: hide
     theme: cosmo
     highlight: textmate
