@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="wangrong" />
+
+
+<title>scRNA-analysis</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="scRNA-analysis.html">scRNA-analysis</a>
+</li>
+<li>
+  <a href="scATAC-seq_analysis.html">scATAC-seq-analysis</a>
+</li>
+<li>
+  <a href="scATAC-seq_analysis.html">conjoint analysis</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">scRNA-analysis</h1>
+<h4 class="author">wangrong</h4>
+<h4 class="date">2021/12/28</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-01-10
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20211228code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20211228)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20211228code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20211228)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongabsolute"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>File paths:</strong> absolute </a>
+</p>
+</div>
+<div id="strongFilepathsstrongabsolute" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Using absolute paths to the files within your workflowr project makes it difficult for you and others to run your code on a different machine. Change the absolute path(s) below to the suggested relative path(s) to make your code more reproducible.
+</p>
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th style="text-align:left;">
+absolute
+</th>
+<th style="text-align:left;">
+relative
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+/home/rongwang/The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine/data/SAMPLE_INFORMATION.csv
+</td>
+<td style="text-align:left;">
+data/SAMPLE_INFORMATION.csv
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong02561e3"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> 02561e3 </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrong02561e3" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version 02561e3. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Untracked files:
+    Untracked:  data/SAMPLE_INFORMATION.csv
+    Untracked:  figure/
+    Untracked:  site_libs/
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/scRNA-analysis.Rmd</code>) and HTML (<code>docs/scRNA-analysis.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+02561e3
+</td>
+<td>
+WangRong423
+</td>
+<td>
+2022-01-10
+</td>
+<td>
+Start my new project
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="qc-table" class="section level2">
+<h2>QC table</h2>
+<p>Raw gene expression matrices were generated for each sample by the Cell Ranger ARC(V.2.0) Pipeline coupled with human reference version GRCh38. The output filtered gene expression matrices were analyzed by R software (v.4.1.1) with the Seurat package (v.4.0.3). Low-quality cells were removed if they met the following criteria:</p>
+<ol style="list-style-type: decimal">
+<li>&lt;800 &amp;&gt;25000 unique molecular identifiers (UMIs);</li>
+<li>&lt;200 &amp;&gt;5000 genes which expressed in less than three cells;</li>
+<li>UMIs derived from the mitochondrial genome &gt;15%.</li>
+</ol>
+<pre class="r"><code>test&lt;-read.csv(&#39;/home/rongwang/The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine/data/SAMPLE_INFORMATION.csv&#39;,sep = &quot;,&quot;,header = F)
+
+kable(test)</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="2%" />
+<col width="6%" />
+<col width="7%" />
+<col width="5%" />
+<col width="5%" />
+<col width="6%" />
+<col width="6%" />
+<col width="6%" />
+<col width="7%" />
+<col width="5%" />
+<col width="5%" />
+<col width="6%" />
+<col width="6%" />
+<col width="9%" />
+<col width="9%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">V1</th>
+<th align="left">V2</th>
+<th align="left">V3</th>
+<th align="left">V4</th>
+<th align="left">V5</th>
+<th align="left">V6</th>
+<th align="left">V7</th>
+<th align="left">V8</th>
+<th align="left">V9</th>
+<th align="left">V10</th>
+<th align="left">V11</th>
+<th align="left">V12</th>
+<th align="left">V13</th>
+<th align="left">V14</th>
+<th align="left">V15</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">SAMPLE</td>
+<td align="left">BEFOR QC</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">AFTER QC</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">NOTE</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">number of cells</td>
+<td align="left">Median fragments</td>
+<td align="left">Median genes</td>
+<td align="left">Median counts</td>
+<td align="left">Mean percent.mt</td>
+<td align="left">Multiplet Rate</td>
+<td align="left">number of cells</td>
+<td align="left">Median fragments</td>
+<td align="left">Median genes</td>
+<td align="left">Median counts</td>
+<td align="left">Mean percent.mt</td>
+<td align="left">Multiplet Rate</td>
+<td align="left">Multiplet Rate_another</td>
+<td align="left">Notes</td>
+</tr>
+<tr class="odd">
+<td align="left">M1-1</td>
+<td align="left">10,275</td>
+<td align="left">6264</td>
+<td align="left">1,940</td>
+<td align="left">4,648</td>
+<td align="left">7.795</td>
+<td align="left">0.40%</td>
+<td align="left">9449</td>
+<td align="left"></td>
+<td align="left">1974</td>
+<td align="left">4730</td>
+<td align="left">6.56</td>
+<td align="left">0.33%</td>
+<td align="left">0.0924</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M1-2</td>
+<td align="left">15,640</td>
+<td align="left">6,835</td>
+<td align="left">1,717</td>
+<td align="left">3,688</td>
+<td align="left">7.4278</td>
+<td align="left">0.43%</td>
+<td align="left">13835</td>
+<td align="left"></td>
+<td align="left">1808</td>
+<td align="left">3969</td>
+<td align="left">6.66</td>
+<td align="left">0.37%</td>
+<td align="left">0.2559</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M1-3</td>
+<td align="left">9,267</td>
+<td align="left">9,059</td>
+<td align="left">1,536</td>
+<td align="left">3,005</td>
+<td align="left">7.8122</td>
+<td align="left">0.51%</td>
+<td align="left">8546</td>
+<td align="left"></td>
+<td align="left">1558</td>
+<td align="left">3060</td>
+<td align="left">6.84</td>
+<td align="left">0.44%</td>
+<td align="left">0.0396</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M1-4</td>
+<td align="left">11,754</td>
+<td align="left">8,865</td>
+<td align="left">1,924</td>
+<td align="left">4,230</td>
+<td align="left">5.9942</td>
+<td align="left">0.31%</td>
+<td align="left">11000</td>
+<td align="left"></td>
+<td align="left">1951</td>
+<td align="left">4288</td>
+<td align="left">5.23</td>
+<td align="left">0.27%</td>
+<td align="left">0.1223</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M1-5</td>
+<td align="left">14,864</td>
+<td align="left">7,715</td>
+<td align="left">1,793</td>
+<td align="left">3,834</td>
+<td align="left">7.7757</td>
+<td align="left">0.43%</td>
+<td align="left">14068</td>
+<td align="left"></td>
+<td align="left">1810</td>
+<td align="left">3867</td>
+<td align="left">7.17</td>
+<td align="left">0.40%</td>
+<td align="left">0.0388</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M1-6</td>
+<td align="left">15,476</td>
+<td align="left">7,002</td>
+<td align="left">1,642</td>
+<td align="left">3,326</td>
+<td align="left">7.8021</td>
+<td align="left">0.48%</td>
+<td align="left">14,793</td>
+<td align="left"></td>
+<td align="left">1,656</td>
+<td align="left">3,356</td>
+<td align="left">7.38</td>
+<td align="left">0.45%</td>
+<td align="left">0.3207</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M1-7</td>
+<td align="left">14,087</td>
+<td align="left">7,326</td>
+<td align="left">1,677</td>
+<td align="left">3,628</td>
+<td align="left">8.6532</td>
+<td align="left">0.52%</td>
+<td align="left">13,012</td>
+<td align="left"></td>
+<td align="left">1,702</td>
+<td align="left">3,692</td>
+<td align="left">7.79</td>
+<td align="left">0.46%</td>
+<td align="left">0.2925</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M1-8</td>
+<td align="left">10,550</td>
+<td align="left">10,360</td>
+<td align="left">1,649</td>
+<td align="left">3,595</td>
+<td align="left">8.5636</td>
+<td align="left">0.52%</td>
+<td align="left">9,649</td>
+<td align="left"></td>
+<td align="left">1,741</td>
+<td align="left">3,666</td>
+<td align="left">7.94</td>
+<td align="left">0.46%</td>
+<td align="left">0.2545</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M1-9</td>
+<td align="left">10,083</td>
+<td align="left">12,573</td>
+<td align="left">1,686</td>
+<td align="left">3,797</td>
+<td align="left">8.552</td>
+<td align="left">0.51%</td>
+<td align="left">9,387</td>
+<td align="left"></td>
+<td align="left">1,707</td>
+<td align="left">3,851</td>
+<td align="left">7.74</td>
+<td align="left">0.45%</td>
+<td align="left">0.217</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M1-10</td>
+<td align="left">9,753</td>
+<td align="left">13,313</td>
+<td align="left">1,728</td>
+<td align="left">3,838</td>
+<td align="left">8.10695</td>
+<td align="left">0.47%</td>
+<td align="left">9,022</td>
+<td align="left"></td>
+<td align="left">1,752</td>
+<td align="left">3,896</td>
+<td align="left">7.29</td>
+<td align="left">0.42%</td>
+<td align="left">0.1199</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M2-1</td>
+<td align="left">16,381</td>
+<td align="left">6,163</td>
+<td align="left">1,469</td>
+<td align="left">2,837</td>
+<td align="left">7.665</td>
+<td align="left">0.52%</td>
+<td align="left">12,899</td>
+<td align="left"></td>
+<td align="left">1,607</td>
+<td align="left">3,217</td>
+<td align="left">7.04</td>
+<td align="left">0.44%</td>
+<td align="left">0.2445</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M2-4</td>
+<td align="left">12,007</td>
+<td align="left">13,874</td>
+<td align="left">1,913</td>
+<td align="left">4,401</td>
+<td align="left">7.44879</td>
+<td align="left">0.39%</td>
+<td align="left">11,393</td>
+<td align="left"></td>
+<td align="left">1,931</td>
+<td align="left">4,473</td>
+<td align="left">6.84</td>
+<td align="left">0.35%</td>
+<td align="left">0.0256</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M2-5</td>
+<td align="left">11,956</td>
+<td align="left">4,875</td>
+<td align="left">1,681</td>
+<td align="left">3,378</td>
+<td align="left">5.5161</td>
+<td align="left">0.33%</td>
+<td align="left">11,471</td>
+<td align="left"></td>
+<td align="left">1,701</td>
+<td align="left">3,425</td>
+<td align="left">5.32</td>
+<td align="left">0.31%</td>
+<td align="left">0.0751</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M2-6</td>
+<td align="left">10,588</td>
+<td align="left">11,901</td>
+<td align="left">1,815</td>
+<td align="left">3,981</td>
+<td align="left">6.969</td>
+<td align="left">0.38%</td>
+<td align="left">10,121</td>
+<td align="left"></td>
+<td align="left">1,832</td>
+<td align="left">4,037</td>
+<td align="left">6.5</td>
+<td align="left">0.35%</td>
+<td align="left">0.4809</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M2-7</td>
+<td align="left">9,378</td>
+<td align="left">11,028</td>
+<td align="left">1,925</td>
+<td align="left">4,394</td>
+<td align="left">7.4543</td>
+<td align="left">0.39%</td>
+<td align="left">8,755</td>
+<td align="left"></td>
+<td align="left">1,949</td>
+<td align="left">4,445</td>
+<td align="left">6.81</td>
+<td align="left">0.35%</td>
+<td align="left">0.43068</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M2-8</td>
+<td align="left">10,701</td>
+<td align="left">13,992</td>
+<td align="left">1,981</td>
+<td align="left">4,628</td>
+<td align="left">6.748</td>
+<td align="left">0.34%</td>
+<td align="left">10,385</td>
+<td align="left"></td>
+<td align="left">1,992</td>
+<td align="left">4,662</td>
+<td align="left">6.04</td>
+<td align="left">0.30%</td>
+<td align="left">0.3683</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M2-9</td>
+<td align="left">10,015</td>
+<td align="left">14,100</td>
+<td align="left">1,910</td>
+<td align="left">4,462</td>
+<td align="left">6.87455</td>
+<td align="left">0.36%</td>
+<td align="left">9,558</td>
+<td align="left"></td>
+<td align="left">1,930</td>
+<td align="left">4,513</td>
+<td align="left">6.36</td>
+<td align="left">0.33%</td>
+<td align="left">0.209</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M2-10</td>
+<td align="left">7,693</td>
+<td align="left">17,742</td>
+<td align="left">2,116</td>
+<td align="left">5,043</td>
+<td align="left">7.107</td>
+<td align="left">0.34%</td>
+<td align="left">7,338</td>
+<td align="left"></td>
+<td align="left">2,132</td>
+<td align="left">5,081</td>
+<td align="left">6.67</td>
+<td align="left">0.31%</td>
+<td align="left">0.1968</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M3-1</td>
+<td align="left">11,650</td>
+<td align="left">8,758</td>
+<td align="left">508</td>
+<td align="left">2804</td>
+<td align="left">37.2752</td>
+<td align="left">7.34%</td>
+<td align="left">5,248</td>
+<td align="left"></td>
+<td align="left">1730</td>
+<td align="left">3626</td>
+<td align="left">7.21</td>
+<td align="left">0.42%</td>
+<td align="left">0.0897</td>
+<td align="left">Different QC standards</td>
+</tr>
+<tr class="even">
+<td align="left">M3-2</td>
+<td align="left">13,357</td>
+<td align="left">7,961</td>
+<td align="left">79</td>
+<td align="left">2956</td>
+<td align="left">52.3007</td>
+<td align="left">66.20%</td>
+<td align="left">3,282</td>
+<td align="left"></td>
+<td align="left">1840</td>
+<td align="left">3864</td>
+<td align="left">6.63</td>
+<td align="left">0.36%</td>
+<td align="left">0.0393</td>
+<td align="left">Different QC standards</td>
+</tr>
+<tr class="odd">
+<td align="left">M3-3</td>
+<td align="left">17,057</td>
+<td align="left">8,026</td>
+<td align="left">80</td>
+<td align="left">2191</td>
+<td align="left">56.6009</td>
+<td align="left">70.75%</td>
+<td align="left">3,712</td>
+<td align="left"></td>
+<td align="left">1671</td>
+<td align="left">3153</td>
+<td align="left">7.64</td>
+<td align="left">0.46%</td>
+<td align="left">0.0657</td>
+<td align="left">Different QC standards</td>
+</tr>
+<tr class="even">
+<td align="left">M3-4</td>
+<td align="left">12,286</td>
+<td align="left">14,068</td>
+<td align="left">1,952</td>
+<td align="left">4,798</td>
+<td align="left">7.8076</td>
+<td align="left">0.40%</td>
+<td align="left">11,050</td>
+<td align="left"></td>
+<td align="left">2,003</td>
+<td align="left">4,923</td>
+<td align="left">6.63</td>
+<td align="left">0.33%</td>
+<td align="left">0.0974</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M3-5</td>
+<td align="left">10,969</td>
+<td align="left">13,019</td>
+<td align="left">2,067</td>
+<td align="left">5,581</td>
+<td align="left">6.8651</td>
+<td align="left">0.33%</td>
+<td align="left">10,353</td>
+<td align="left"></td>
+<td align="left">2,089</td>
+<td align="left">5,646</td>
+<td align="left">6.28</td>
+<td align="left">0.30%</td>
+<td align="left">0.111</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M3-6</td>
+<td align="left">9,701</td>
+<td align="left">14,269</td>
+<td align="left">2,063</td>
+<td align="left">5,232</td>
+<td align="left">7.14014</td>
+<td align="left">0.35%</td>
+<td align="left">9,255</td>
+<td align="left"></td>
+<td align="left">2,079</td>
+<td align="left">5,262</td>
+<td align="left">6.76</td>
+<td align="left">0.33%</td>
+<td align="left">0.1192</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M3-7</td>
+<td align="left">9,916</td>
+<td align="left">15,978</td>
+<td align="left">1,953</td>
+<td align="left">4,852</td>
+<td align="left">7.55251</td>
+<td align="left">0.39%</td>
+<td align="left">9,383</td>
+<td align="left"></td>
+<td align="left">1,971</td>
+<td align="left">4,894</td>
+<td align="left">7.08</td>
+<td align="left">0.36%</td>
+<td align="left">0.1687</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M3-8</td>
+<td align="left">9,558</td>
+<td align="left">17,508</td>
+<td align="left">1,800</td>
+<td align="left">4,327</td>
+<td align="left">8.333</td>
+<td align="left">0.46%</td>
+<td align="left">8,360</td>
+<td align="left"></td>
+<td align="left">1,858</td>
+<td align="left">4,531</td>
+<td align="left">7.46</td>
+<td align="left">0.40%</td>
+<td align="left">0.039</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M3-9</td>
+<td align="left">14,314</td>
+<td align="left">11,334</td>
+<td align="left">1,842</td>
+<td align="left">4,390</td>
+<td align="left">6.4114</td>
+<td align="left">0.35%</td>
+<td align="left">13,580</td>
+<td align="left"></td>
+<td align="left">1,862</td>
+<td align="left">4,418</td>
+<td align="left">6.1</td>
+<td align="left">0.33%</td>
+<td align="left">0.1709</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M3-10</td>
+<td align="left">14,032</td>
+<td align="left">8,338</td>
+<td align="left">1,431</td>
+<td align="left">2,793</td>
+<td align="left">7.1158</td>
+<td align="left">0.50%</td>
+<td align="left">12,939</td>
+<td align="left"></td>
+<td align="left">1,462</td>
+<td align="left">2,852</td>
+<td align="left">6</td>
+<td align="left">0.44%</td>
+<td align="left">0.2094</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M5-1</td>
+<td align="left">10,091</td>
+<td align="left">15,509</td>
+<td align="left">1,763</td>
+<td align="left">3,943</td>
+<td align="left">7.523</td>
+<td align="left">0.43%</td>
+<td align="left">9,462</td>
+<td align="left"></td>
+<td align="left">1,787</td>
+<td align="left">4,002</td>
+<td align="left">6.821</td>
+<td align="left">0.38%</td>
+<td align="left">0.2221</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M5-2</td>
+<td align="left">12,351</td>
+<td align="left">14,539</td>
+<td align="left">1,750</td>
+<td align="left">4,068</td>
+<td align="left">7.497</td>
+<td align="left">0.43%</td>
+<td align="left">11,304</td>
+<td align="left"></td>
+<td align="left">1,787</td>
+<td align="left">4,126</td>
+<td align="left">6.968</td>
+<td align="left">0.39%</td>
+<td align="left">0.2539</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M5-3</td>
+<td align="left">11,822</td>
+<td align="left">11,308</td>
+<td align="left">1,778</td>
+<td align="left">3,886</td>
+<td align="left">7.16</td>
+<td align="left">0.40%</td>
+<td align="left">11,280</td>
+<td align="left"></td>
+<td align="left">1,795</td>
+<td align="left">3,928</td>
+<td align="left">6.74</td>
+<td align="left">0.38%</td>
+<td align="left">0.2545</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M5-4</td>
+<td align="left">9,365</td>
+<td align="left">15,557</td>
+<td align="left">1,846</td>
+<td align="left">4,185</td>
+<td align="left">7.037</td>
+<td align="left">0.38%</td>
+<td align="left">8,907</td>
+<td align="left"></td>
+<td align="left">1,866</td>
+<td align="left">4,230</td>
+<td align="left">6.506</td>
+<td align="left">0.35%</td>
+<td align="left">0.0348</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M5-5</td>
+<td align="left">8,260</td>
+<td align="left">16,884</td>
+<td align="left">1,783</td>
+<td align="left">3,862</td>
+<td align="left">7.553</td>
+<td align="left">0.42%</td>
+<td align="left">7,776</td>
+<td align="left"></td>
+<td align="left">1,805</td>
+<td align="left">3,914</td>
+<td align="left">6.918</td>
+<td align="left">0.38%</td>
+<td align="left">0.097</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M5-6</td>
+<td align="left">9,450</td>
+<td align="left">14,950</td>
+<td align="left">1,742</td>
+<td align="left">3,823</td>
+<td align="left">7.18</td>
+<td align="left">0.41%</td>
+<td align="left">9,040</td>
+<td align="left"></td>
+<td align="left">1,757</td>
+<td align="left">3,862</td>
+<td align="left">6.76</td>
+<td align="left">0.38%</td>
+<td align="left">0.3012</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M5-7</td>
+<td align="left">10,577</td>
+<td align="left">15,797</td>
+<td align="left">1,896</td>
+<td align="left">4,198</td>
+<td align="left">7.219</td>
+<td align="left">0.38%</td>
+<td align="left">10,228</td>
+<td align="left"></td>
+<td align="left">1,905</td>
+<td align="left">4,219</td>
+<td align="left">6.92</td>
+<td align="left">0.36%</td>
+<td align="left">0.1257</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M5-8</td>
+<td align="left">11,070</td>
+<td align="left">13,300</td>
+<td align="left">1,664</td>
+<td align="left">3,459</td>
+<td align="left">8.4</td>
+<td align="left">0.50%</td>
+<td align="left">10,285</td>
+<td align="left"></td>
+<td align="left">1,689</td>
+<td align="left">3,516</td>
+<td align="left">7.77</td>
+<td align="left">0.46%</td>
+<td align="left">0.0973</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">M5-9</td>
+<td align="left">12,161</td>
+<td align="left">12,826</td>
+<td align="left">1,423</td>
+<td align="left">2,758</td>
+<td align="left">7.659</td>
+<td align="left">0.54%</td>
+<td align="left">11,444</td>
+<td align="left"></td>
+<td align="left">1,442</td>
+<td align="left">2,786</td>
+<td align="left">7.27</td>
+<td align="left">0.50%</td>
+<td align="left">0.1911</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">M5-10</td>
+<td align="left">15,301</td>
+<td align="left">8,844</td>
+<td align="left">1,384</td>
+<td align="left">2,603</td>
+<td align="left">7.644</td>
+<td align="left">0.55%</td>
+<td align="left">13836</td>
+<td align="left"></td>
+<td align="left">1439</td>
+<td align="left">2716</td>
+<td align="left">7.041</td>
+<td align="left">0.49%</td>
+<td align="left">0.3791</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">sum</td>
+<td align="left">443756</td>
+<td align="left">441760</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">385405</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">mean</td>
+<td align="left">11,678</td>
+<td align="left">11625.26316</td>
+<td align="left">1,655</td>
+<td align="left">3879.526316</td>
+<td align="left">10.69841684</td>
+<td align="left">4.19%</td>
+<td align="left">10142.23684</td>
+<td align="left"></td>
+<td align="left">1804.473684</td>
+<td align="left">4018.315789</td>
+<td align="left">6.844052632</td>
+<td align="left">0.38%</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="identify-doublets" class="section level2">
+<h2>Identify doublets</h2>
+<p>To remove potential doublets, for PBMC samples, cells with UMI counts above 25,000 and detected genes above 5,000 are filtered out. Additionally, we applied DoubletFinder to identify potential doublets. After quality control, a total of 384,765 cells were remained.</p>
+<pre class="r"><code>library(&#39;patchwork&#39;)
+library(&#39;ggplot2&#39;)
+library(&#39;dplyr&#39;)
+library(&#39;Seurat&#39;)
+library(&#39;Matrix&#39;)
+library(&#39;fields&#39;)
+library(&#39;KernSmooth&#39;)
+library(&#39;ROCR&#39;)
+library(&#39;parallel&#39;)
+library(&#39;DoubletFinder&#39;)
+
+people &lt;- c(&#39;1&#39;,&#39;2&#39;, &#39;3&#39;, &#39;5&#39;)
+
+for (person in people){
+  for (timepoint in 1:10) {
+    data_dir = paste(&#39;/database/Results/0712_ATAC+RNA/M&#39;, person, &#39;-&#39;, timepoint, &#39;/outs/filtered_feature_bc_matrix/&#39;, sep = &quot;&quot;)
+    print (data_dir)
+    
+    sample &lt;- Read10X(data.dir = data_dir)
+    seu_sample &lt;- CreateSeuratObject(counts = sample$`Gene Expression`)
+    seu_sample &lt;- NormalizeData(seu_sample)
+    seu_sample &lt;- FindVariableFeatures(seu_sample, selection.method = &quot;vst&quot;, nfeatures = 2000)
+    seu_sample &lt;- ScaleData(seu_sample)
+    seu_sample &lt;- RunPCA(seu_sample)
+    seu_sample &lt;- FindNeighbors(seu_sample)
+    seu_sample &lt;- FindClusters(seu_sample)
+    seu_sample &lt;- RunUMAP(seu_sample, dims = 1:10)
+    num_cell &lt;- nrow(seu_sample@meta.data)
+    title1 &lt;- paste(&#39;Num_Cell:&#39;, num_cell, seq = &quot;&quot;)
+    p &lt;- DimPlot(seu_sample, reduction = &quot;umap&quot;, label = TRUE) + ggtitle(title1)
+    
+    sweep.res.list_sample &lt;- paramSweep_v3(seu_sample, PCs = 1:10, sct = FALSE)
+    sweep.stats_sample &lt;- summarizeSweep(sweep.res.list_sample, GT = FALSE)
+    bcmvn_sample &lt;- find.pK(sweep.stats_sample)
+    mpK &lt;- as.numeric(as.vector(bcmvn_sample$pK[which.max(bcmvn_sample$BCmetric)]))
+    print(paste(&quot;The best pK value of sample is:&quot;, mpK))
+    
+    annotations &lt;- seu_sample@meta.data$seurat_clusters
+    homotypic.prop &lt;- modelHomotypic(annotations)
+    doublet_rate &lt;- 0.0008*num_cell*0.01
+    nExp_poi &lt;- round(doublet_rate*num_cell) 
+    nExp_poi.adj &lt;- round(nExp_poi*(1-homotypic.prop))
+    
+    seu_sample &lt;- doubletFinder_v3(seu_sample, PCs = 1:10, pN = 0.25, pK = mpK, nExp = nExp_poi, reuse.pANN = FALSE, sct = FALSE)
+    
+    reuse.pANN_path &lt;- paste(&#39;pANN_0.25_&#39;, mpK, &#39;_&#39;, nExp_poi, sep = &quot;&quot;)
+    seu_sample &lt;- doubletFinder_v3(seu_sample, PCs = 1:10, pN = 0.25, pK = mpK, nExp = nExp_poi.adj, reuse.pANN = reuse.pANN_path, sct = FALSE)
+    
+    group.by_path &lt;- paste(&#39;DF.classifications_0.25_&#39;, mpK, &#39;_&#39;, nExp_poi.adj, sep = &quot;&quot;)
+    title2 &lt;- paste(&#39;Singlet:&#39;, num_cell - nExp_poi.adj, &#39; Doublet:&#39;, nExp_poi.adj, seq = &quot;&quot;)
+    q &lt;- DimPlot(seu_sample, reduction = &quot;umap&quot;, group.by = group.by_path) + ggtitle(title2)
+    
+    name = paste(&#39;DoubletFinder_M&#39;, person, &#39;-&#39;, timepoint, &#39;.pdf&#39;, sep = &quot;&quot;)
+    pdf(file = name)
+    print(p)
+    print(q)
+    dev.off ()
+    
+    print(paste(&#39;DoubletFinder_M&#39;, person, &#39;-&#39;, timepoint, &#39; DONE!&#39;, sep = &quot;&quot;))
+  }
+}</code></pre>
+</div>
+<div id="batch-effect-correction-clustering-and-annotation" class="section level2">
+<h2>Batch effect correction &amp; Clustering and annotation</h2>
+<p>To integrate cells into a shared space from different datasets for unsupervised clustering, we used the harmony algorithm (Korsunsky et al., 2019) to do batch effect correction. <a href="Batch-effect-correction.html">Batch effect correction &amp; Clustering and annotation</a></p>
+</div>
+<div id="comparing-immune-cell-proportion" class="section level2">
+<h2>Comparing immune cell proportion</h2>
+<p>The cell type ratio is calculated by dividing the number of cells of a particular cell type at a given point in time by the number of cells at a given point in time in a given participant. <a href="Comparing-immune-cell-proportion.html">Comparing immune cell proportion</a></p>
+</div>
+<div id="gene-sharing-and-specific-expression-analysis-across-timepoints" class="section level2">
+<h2>Gene sharing and specific expression analysis across timepoints</h2>
+<p>Mashr is used to estimate the role of each gene at each time point, allowing cross-time sharing and gene specific expression at specific time points <a href="mashr.html">mashr</a></p>
+</div>
+<div id="gene-ontology-enrichment-analysis-for-sets-of-genes-with-identical-expression-patterns" class="section level2">
+<h2>Gene Ontology enrichment analysis for sets of genes with identical expression patterns</h2>
+<p>Through feature extraction, hierarchical clustering was carried out according to the slope, direction, zero percentage and cross-point slope of genes at ten timepoints.The degree of cohesion and separation were calculated for each clustering. Based on these genes, enriched GO terms and KEGG were then acquired for each genes using R package clusterProfiler following the default parameters. Annotation R package “org.Hs.eg.db” was used to map gene identifiers. <a href="clusterprofiler.html">clusterProfiler</a></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.1 (2021-08-10)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 20.04.3 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.9.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] rmarkdown_2.11  knitr_1.37      workflowr_1.7.0
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.7       highr_0.9        compiler_4.1.1   pillar_1.6.4    
+ [5] bslib_0.3.1      later_1.2.0      git2r_0.29.0     jquerylib_0.1.4 
+ [9] tools_4.1.1      getPass_0.2-2    digest_0.6.29    jsonlite_1.7.2  
+[13] evaluate_0.14    tibble_3.1.6     lifecycle_1.0.1  pkgconfig_2.0.3 
+[17] rlang_0.4.12     rstudioapi_0.13  yaml_2.2.1       xfun_0.29       
+[21] fastmap_1.1.0    httr_1.4.2       stringr_1.4.0    sass_0.4.0      
+[25] fs_1.5.2         vctrs_0.3.8      rprojroot_2.0.2  glue_1.4.2      
+[29] R6_2.5.1         processx_3.5.2   fansi_0.5.0      callr_3.7.0     
+[33] magrittr_2.0.1   whisker_0.4      ps_1.6.0         promises_1.2.0.1
+[37] htmltools_0.5.2  ellipsis_0.3.2   httpuv_1.6.4     utf8_1.2.2      
+[41] stringi_1.7.6    crayon_1.4.2    </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="wangrong" />
+
+
+<title>mashr</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="scRNA-analysis.html">scRNA-analysis</a>
+</li>
+<li>
+  <a href="scATAC-seq_analysis.html">scATAC-seq-analysis</a>
+</li>
+<li>
+  <a href="scATAC-seq_analysis.html">conjoint analysis</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">mashr</h1>
+<h4 class="author">wangrong</h4>
+<h4 class="date">2022/1/7</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-01-10
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>The-single-cell-epigenetic-and-transcriptional-landscape-of-immune-response-to-SARS-CoV-2-vaccine/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20211228code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20211228)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20211228code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20211228)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong02561e3"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> 02561e3 </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrong02561e3" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version 02561e3. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Untracked files:
+    Untracked:  data/SAMPLE_INFORMATION.csv
+    Untracked:  figure/
+    Untracked:  site_libs/
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/mashr.Rmd</code>) and HTML (<code>docs/mashr.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+02561e3
+</td>
+<td>
+WangRong423
+</td>
+<td>
+2022-01-10
+</td>
+<td>
+Start my new project
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="psudobulk-matrix" class="section level2">
+<h2>psudobulk matrix</h2>
+<p>First ,to build different cell types psudobulk matrix</p>
+<pre class="r"><code>pbmc&lt;-readRDS(&quot;/database/Results/0712_ATAC+RNA/downstream_analysis/10.20.annotation_pbmc.rds&quot;)
+counts &lt;- pbmc@assays$RNA@counts
+metadata&lt;-pbmc@meta.data
+metadata&lt;-metadata[,c(&quot;run&quot;,&quot;Participants&quot;,&quot;Timepoints&quot;,&quot;annotation&quot;)]
+metadata$run &lt;- gsub(&quot;-&quot;,&quot;&quot;,metadata$run)
+metadata$Timepoints &lt;- as.factor(metadata$Timepoints)
+metadata$Participants &lt;- as.factor(metadata$Participants)
+metadata$run &lt;- as.factor(metadata$run)
+
+sce &lt;- SingleCellExperiment(assays = list(counts = counts), colData = metadata)
+groups &lt;- colData(sce)[, c(&quot;annotation&quot;, &quot;run&quot;)]
+Timepoints &lt;- purrr::set_names(levels(sce$Timepoints))
+nt &lt;- length(Timepoints)
+annotation &lt;- purrr::set_names(levels(sce$annotation))
+na&lt;- length(annotation)
+Participants &lt;- purrr::set_names(levels(sce$Participants))
+np&lt;- length(Participants)
+run &lt;- purrr::set_names(levels(sce$run))
+nr&lt;- length(run)
+table(sce$run)              
+nr_cells &lt;- as.numeric(table(sce$run))
+mr &lt;- match(run, sce$run)
+eia &lt;- data.frame(colData(sce)[mr, ], nr_cells, row.names = NULL) 
+groups &lt;- colData(sce)[, c(&quot;annotation&quot;,&quot;run&quot;)]
+pb1 &lt;- aggregate.Matrix(t(counts(sce)), groupings = groups, fun = &quot;sum&quot;) 
+class(pb1)
+dim(pb1)
+pb1[1:6, 1:6]
+splitf &lt;- sapply(stringr::str_split(rownames(pb1), pattern = &quot;_&quot;,  n = 2), `[`, 1)
+pb2 &lt;- split.data.frame(pb1, factor(splitf)) %&gt;%lapply(function(u) set_colnames(t(u), stringr::str_extract(rownames(u), &quot;(?&lt;=_)[:alnum:]+&quot;)))
+str(pb2)
+options(width = 100)
+table(sce$annotation, sce$run)
+
+get_sample_ids &lt;- function(x){
+        pb2[[x]] %&gt;%colnames()
+}
+de_samples &lt;- map(1:length(annotation ), get_sample_ids) %&gt;%unlist()
+
+samples_list &lt;- map(1:length(annotation), get_sample_ids)
+get_cluster_ids &lt;- function(x){
+        rep(names(pb2)[x], each = length(samples_list[[x]]))
+}
+de_cluster_ids &lt;- map(1:length(annotation), get_cluster_ids) %&gt;%unlist()
+
+gg_df &lt;- data.frame(annotation = de_cluster_ids,run = de_samples)
+gg_df &lt;- left_join(gg_df, eia[, c(&quot;run&quot;, &quot;Timepoints&quot;, &quot;Participants&quot;)]) 
+metadata &lt;- gg_df %&gt;%dplyr::select(annotation , run, Timepoints, Participants)         
+
+
+metadata$annotation &lt;- as.factor(metadata$annotation)
+clusters &lt;- levels(metadata$annotation)
+save(pb2,metadata, clusters, file =(&quot;/database/Results/0712_ATAC+RNA/downstream_analysis/psudobulk.matrix.RData&quot;)</code></pre>
+</div>
+<div id="mashr-with-common-baseline" class="section level2">
+<h2>mashr with common baseline</h2>
+<p>We assume that we have measurements in multiple timepoints, and want to estimate the deviation in each timepoints from the pre-vaccination</p>
+<pre class="r"><code>load(&quot;/database/Results/0712_ATAC+RNA/downstream_analysis/psudobulk.matrix.RData&quot;)
+for( i in 1:length(clusters)){
+print(clusters[i])
+
+cluster_metadata &lt;- metadata[which(metadata$annotation == clusters[i]), ]
+head(cluster_metadata)
+rownames(cluster_metadata) &lt;- cluster_metadata$run
+counts &lt;- pb2[[clusters[i]]]
+cluster_counts &lt;- data.frame(counts[, which(colnames(counts) %in% rownames(cluster_metadata))])   
+
+#Participants.m &lt;- model.matrix( ~ cluster_metadata$Participants )[,-c(1)]
+condition &lt;- factor(cluster_metadata$Timepoints, levels = c(c(&quot;Day0&quot;,&quot;Day1&quot;,&quot;Day3&quot;,&quot;Day6&quot;,&quot;Day14&quot;,&quot;Day28&quot;,&quot;Day29&quot;,&quot;Day31&quot;,&quot;Day34&quot;,&quot;Day43&quot;) ) )
+design &lt;- cbind( model.matrix(~ condition -1))
+
+y &lt;- DGEList(cluster_counts)
+y &lt;- calcNormFactors(y)
+
+v = voom(y, design)
+
+timepoints.gene &lt;- lmFit( v , design)
+timepoints.Bayes.gene &lt;- eBayes(timepoints.gene)
+
+timepoints.condition.gene.mean &lt;-timepoints.Bayes.gene$coefficients[, 1:10]
+timepoints.condition.gene.se &lt;- ( timepoints.Bayes.gene$stdev.unscaled * sqrt(timepoints.Bayes.gene$s2.post) )[,1:10]
+
+colnames(timepoints.condition.gene.mean) &lt;- colnames(timepoints.condition.gene.se) &lt;- gsub(&quot;condition&quot;,&quot;&quot;, colnames(timepoints.condition.gene.se))
+#machr
+data.gene = mash_set_data(timepoints.condition.gene.mean, timepoints.condition.gene.se)
+data.L.gene = mash_update_data(data.gene, ref = 1)
+U.c.gene = cov_canonical(data.L.gene)
+head(names(U.c.gene))
+mashcontrast.model.gene = mash(data.L.gene, U.c.gene  )
+
+
+sig.DEG_ID &lt;- get_significant_results(mashcontrast.model.gene,thresh = 0.1) 
+
+head( get_pm(mashcontrast.model.gene) )
+
+#save(timepoints.condition.gene.mean,timepoints.condition.gene.se, mashcontrast.model.gene, file = &quot;/database/Results/0712_ATAC+RNA/downstream_analysis/CD14Mono_MashrAnalysis.gene.RData&quot;)
+
+est_pi &lt;- data.frame( Type = factor( names(get_estimated_pi(mashcontrast.model.gene) ), levels = c(names(get_estimated_pi(mashcontrast.model.gene) )) ), 
+                      estimates =  get_estimated_pi(mashcontrast.model.gene)  )
+
+pdf(file=paste0(&#39;/database/Results/0712_ATAC+RNA/downstream_analysis/marsh/&#39;,clusters[[i]],&#39;est_pi.pdf&#39;))
+ggplot( est_pi, aes( x = Type, y = estimates) )+
+    geom_bar(stat = &quot;identity&quot;)+
+    ylab(expression( pi) )+
+    theme_classic()+
+    theme(text = element_text(color = &quot;black&quot;, size = 18), axis.text = element_text(color = &quot;black&quot;), axis.text.x = element_text(angle = -45, vjust = 0), plot.margin = margin(r = 10, b = 10) )+
+    scale_y_continuous(expand = c(0,0))
+dev.off()
+sig.DEG_ID &lt;- get_significant_results(mashcontrast.model.gene,thresh = 0.1) 
+
+mashResult.gene &lt;- get_pm(mashcontrast.model.gene)
+colnames(mashResult.gene) &lt;- gsub(&quot;-Day0&quot;,&quot;.log2FC&quot;,colnames(mashResult.gene))
+mashResult.gene &lt;- cbind(mashResult.gene, get_lfsr( mashcontrast.model.gene ) )
+colnames(mashResult.gene) &lt;- gsub(&quot;-Day0&quot;,&quot;.lfsr&quot;,colnames(mashResult.gene))
+sig.mashResults.gene&lt;- mashResult.gene[sig.DEG_ID,]
+sig.mashResults.gene&lt;-as.data.frame(sig.mashResults.gene)
+sig.mashResults.gene$total.lfsr&lt;-rowSums(sig.mashResults.gene[, c(10,11,12,13,14,15,16,17,18)])
+sig.mashResults.gene&lt;-arrange(sig.mashResults.gene,sig.mashResults.gene$total.lfsr)
+sig.mashResults.gene&lt;-sig.mashResults.gene[1:25,]
+write.csv(sig.mashResults.gene,file=paste0(&#39;/database/Results/0712_ATAC+RNA/downstream_analysis/marsh/&#39;,clusters[[i]],&#39;sig.mashResults.gene.top25.csv&#39;))
+
+sig.mashResults.gene_melt &lt;- data.frame( geneName = rep( rownames(sig.mashResults.gene), 9 ),
+                                                    posterior.log2FC = c(sig.mashResults.gene$Day1.log2FC,
+                                                                        sig.mashResults.gene$Day3.log2FC,
+                                                                        sig.mashResults.gene$Day6.log2FC,
+                                                                        sig.mashResults.gene$Day14.log2FC,
+                                                                        sig.mashResults.gene$Day28.log2FC,
+                                                                        sig.mashResults.gene$Day29.log2FC,
+                                                                        sig.mashResults.gene$Day31.log2FC,
+                                                                        sig.mashResults.gene$Day34.log2FC,
+                                                                        sig.mashResults.gene$Day43.log2FC),
+                                                    lfsr = c( sig.mashResults.gene$Day1.lfsr,
+                                                              sig.mashResults.gene$Day3.lfsr,
+                                                              sig.mashResults.gene$Day6.lfsr,
+                                                              sig.mashResults.gene$Day14.lfsr,
+                                                              sig.mashResults.gene$Day28.lfsr,
+                                                              sig.mashResults.gene$Day29.lfsr,
+                                                              sig.mashResults.gene$Day31.lfsr,
+                                                              sig.mashResults.gene$Day34.lfsr,
+                                                              sig.mashResults.gene$Day43.lfsr),
+                                                    condition = c( rep(&quot;Day1&quot;, nrow(sig.mashResults.gene) ),
+                                                                   rep(&quot;Day3&quot;, nrow(sig.mashResults.gene) ),
+                                                                   rep(&quot;Day6&quot;, nrow(sig.mashResults.gene) ),
+                                                                   rep(&quot;Day14&quot;, nrow(sig.mashResults.gene) ), 
+                                                                   rep(&quot;Day28&quot;, nrow(sig.mashResults.gene) ),
+                                                                   rep(&quot;Day29&quot;, nrow(sig.mashResults.gene) ),
+                                                                   rep(&quot;Day31&quot;, nrow(sig.mashResults.gene) ),
+                                                                   rep(&quot;Day34&quot;, nrow(sig.mashResults.gene) ),
+                                                                   rep(&quot;Day43&quot;, nrow(sig.mashResults.gene) )))
+
+sig.mashResults.gene_melt$condition &lt;- factor(sig.mashResults.gene_melt$condition , levels = c(&quot;Day1&quot;,&quot;Day3&quot;,&quot;Day6&quot;,&quot;Day14&quot;,&quot;Day28&quot;,&quot;Day29&quot;,&quot;Day31&quot;,&quot;Day34&quot;,&quot;Day43&quot;) ) 
+pdf(file=paste0(&#39;/database/Results/0712_ATAC+RNA/downstream_analysis/marsh/&#39;,clusters[[i]],&#39;sig.mashResults.gene.pdf&#39;))
+ggplot(sig.mashResults.gene_melt, aes( x = condition, y = geneName, size = -log(lfsr), color = posterior.log2FC ) )+geom_point()+scale_color_gradientn( colors=c(&quot;cyan&quot;,&quot;red&quot; ))+scale_size_continuous(breaks= -log(c(0.4,0.1,0.05,0.01,0.001)),labels=c(0.4,0.1,0.05,0.01,0.001), range = c(0.5,8),  name = &quot;lfsr&quot; )+geom_point(data =sig.mashResults.gene_melt[sig.mashResults.gene_melt$lfsr&lt;0.1,], aes( x = condition, y = geneName, size = -log(lfsr) ), shape = 1, color = &quot;black&quot; )+ggtitle(&quot;Significant in at least one conditions&quot;)+theme_bw()+theme(
+                   panel.grid.minor = element_blank(), axis.line = element_line(colour = &quot;black&quot;,size = 1),
+                   plot.title = element_text(size = 16, hjust = 0.5),
+                   axis.title=element_blank(),
+                   legend.title=element_text(size=15 ),legend.text = element_text(size = 20),
+                   axis.text.x = element_text(size = 15,angle = -20, vjust = 0.3 , color = &quot;black&quot;) ,axis.text.y = element_text(size = 15, color = &quot;black&quot; ) )
+dev.off()
+print(paste0(clusters[i],&#39;is done!&#39;))
+}</code></pre>
+</div>
+<div id="mashr-with-arbitrary-patterns-of-correlation-among-conditionstimepoints" class="section level2">
+<h2>mashr with arbitrary patterns of correlation among conditions(timepoints)</h2>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.1 (2021-08-10)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 20.04.3 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.9.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] mashr_0.2.50                ashr_2.2-47                
+ [3] RColorBrewer_1.1-2          DESeq2_1.34.0              
+ [5] png_0.1-7                   apeglm_1.16.0              
+ [7] pheatmap_1.0.12             reshape2_1.4.4             
+ [9] magrittr_2.0.1              edgeR_3.36.0               
+[11] limma_3.50.0                Matrix.utils_0.9.8         
+[13] Matrix_1.4-0                cowplot_1.1.1              
+[15] forcats_0.5.1               stringr_1.4.0              
+[17] dplyr_1.0.7                 purrr_0.3.4                
+[19] readr_2.0.1                 tidyr_1.1.4                
+[21] tibble_3.1.6                tidyverse_1.3.1            
+[23] SeuratObject_4.0.2          Seurat_4.0.3               
+[25] scater_1.22.0               ggplot2_3.3.5              
+[27] scuttle_1.4.0               SingleCellExperiment_1.16.0
+[29] SummarizedExperiment_1.24.0 Biobase_2.54.0             
+[31] GenomicRanges_1.46.1        GenomeInfoDb_1.30.0        
+[33] IRanges_2.28.0              S4Vectors_0.32.3           
+[35] BiocGenerics_0.40.0         MatrixGenerics_1.6.0       
+[37] matrixStats_0.61.0          workflowr_1.7.0            
+
+loaded via a namespace (and not attached):
+  [1] scattermore_0.7           coda_0.19-4              
+  [3] bit64_4.0.5               knitr_1.37               
+  [5] irlba_2.3.3               DelayedArray_0.20.0      
+  [7] data.table_1.14.2         rpart_4.1-15             
+  [9] KEGGREST_1.34.0           RCurl_1.98-1.5           
+ [11] generics_0.1.1            ScaledMatrix_1.2.0       
+ [13] callr_3.7.0               RSQLite_2.2.9            
+ [15] RANN_2.6.1                future_1.23.0            
+ [17] bit_4.0.4                 tzdb_0.2.0               
+ [19] spatstat.data_2.1-0       xml2_1.3.3               
+ [21] lubridate_1.8.0           httpuv_1.6.4             
+ [23] assertthat_0.2.1          viridis_0.6.2            
+ [25] xfun_0.29                 hms_1.1.1                
+ [27] jquerylib_0.1.4           evaluate_0.14            
+ [29] promises_1.2.0.1          fansi_0.5.0              
+ [31] dbplyr_2.1.1              readxl_1.3.1             
+ [33] igraph_1.2.10             DBI_1.1.2                
+ [35] geneplotter_1.72.0        htmlwidgets_1.5.4        
+ [37] spatstat.geom_2.2-2       ellipsis_0.3.2           
+ [39] backports_1.4.1           annotate_1.72.0          
+ [41] deldir_1.0-6              sparseMatrixStats_1.6.0  
+ [43] vctrs_0.3.8               ROCR_1.0-11              
+ [45] abind_1.4-5               cachem_1.0.6             
+ [47] withr_2.4.3               grr_0.9.5                
+ [49] bdsmatrix_1.3-4           sctransform_0.3.2        
+ [51] goftest_1.2-2             softImpute_1.4-1         
+ [53] cluster_2.1.2             lazyeval_0.2.2           
+ [55] crayon_1.4.2              genefilter_1.76.0        
+ [57] pkgconfig_2.0.3           nlme_3.1-153             
+ [59] vipor_0.4.5               rlang_0.4.12             
+ [61] globals_0.14.0            lifecycle_1.0.1          
+ [63] miniUI_0.1.1.1            modelr_0.1.8             
+ [65] rsvd_1.0.5                invgamma_1.1             
+ [67] cellranger_1.1.0          rprojroot_2.0.2          
+ [69] polyclip_1.10-0           lmtest_0.9-39            
+ [71] zoo_1.8-9                 reprex_2.0.1             
+ [73] beeswarm_0.4.0            whisker_0.4              
+ [75] ggridges_0.5.3            processx_3.5.2           
+ [77] viridisLite_0.4.0         bitops_1.0-7             
+ [79] getPass_0.2-2             KernSmooth_2.23-20       
+ [81] Biostrings_2.62.0         blob_1.2.2               
+ [83] DelayedMatrixStats_1.16.0 mixsqp_0.3-43            
+ [85] SQUAREM_2021.1            parallelly_1.30.0        
+ [87] rmeta_3.0                 beachmat_2.10.0          
+ [89] scales_1.1.1              memoise_2.0.1            
+ [91] plyr_1.8.6                ica_1.0-2                
+ [93] zlibbioc_1.40.0           compiler_4.1.1           
+ [95] bbmle_1.0.24              fitdistrplus_1.1-6       
+ [97] cli_3.1.0                 XVector_0.34.0           
+ [99] listenv_0.8.0             patchwork_1.1.1          
+[101] pbapply_1.5-0             ps_1.6.0                 
+[103] MASS_7.3-54               mgcv_1.8-38              
+[105] tidyselect_1.1.1          stringi_1.7.6            
+[107] emdbook_1.3.12            yaml_2.2.1               
+[109] BiocSingular_1.10.0       locfit_1.5-9.4           
+[111] ggrepel_0.9.1             grid_4.1.1               
+[113] sass_0.4.0                tools_4.1.1              
+[115] future.apply_1.8.1        parallel_4.1.1           
+[117] rstudioapi_0.13           git2r_0.29.0             
+[119] gridExtra_2.3             Rtsne_0.15               
+[121] digest_0.6.29             shiny_1.7.1              
+[123] Rcpp_1.0.7                broom_0.7.10             
+[125] later_1.2.0               RcppAnnoy_0.0.19         
+[127] httr_1.4.2                AnnotationDbi_1.56.2     
+[129] colorspace_2.0-2          rvest_1.0.2              
+[131] XML_3.99-0.8              fs_1.5.2                 
+[133] tensor_1.5                reticulate_1.22          
+[135] truncnorm_1.0-8           splines_4.1.1            
+[137] uwot_0.1.11               spatstat.utils_2.3-0     
+[139] plotly_4.10.0             xtable_1.8-4             
+[141] jsonlite_1.7.2            R6_2.5.1                 
+[143] pillar_1.6.4              htmltools_0.5.2          
+[145] mime_0.12                 glue_1.4.2               
+[147] fastmap_1.1.0             BiocParallel_1.28.3      
+[149] BiocNeighbors_1.12.0      codetools_0.2-18         
+[151] mvtnorm_1.1-3             utf8_1.2.2               
+[153] lattice_0.20-44           bslib_0.3.1              
+[155] spatstat.sparse_2.1-0     numDeriv_2016.8-1.1      
+[157] ggbeeswarm_0.6.0          leiden_0.3.9             
+[159] survival_3.2-12           rmarkdown_2.11           
+[161] munsell_0.5.0             GenomeInfoDbData_1.2.7   
+[163] haven_2.4.3               gtable_0.3.0             
+[165] spatstat.core_2.3-0      </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
